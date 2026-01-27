@@ -1,12 +1,12 @@
 import { Router } from "expo-router";
 import { ReactNode } from "react";
 import {
-    TextInput,
-    TextInputProps,
-    TextProps,
-    TextStyle,
-    TouchableOpacityProps,
-    ViewStyle,
+  TextInput,
+  TextInputProps,
+  TextProps,
+  TextStyle,
+  TouchableOpacityProps,
+  ViewStyle,
 } from "react-native";
 
 export type TypoProps = {

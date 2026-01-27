@@ -4,6 +4,7 @@ import Input from '@/components/Input'
 import ScreenWrapper from '@/components/ScreenWrapper'
 import Typo from '@/components/Typo'
 import { colors, radius, spacingX, spacingY } from '@/constants/theme'
+import { useAuth } from '@/context/authContext'
 import { verticalScale } from '@/utils/styling'
 import { useRouter } from 'expo-router'
 import * as Icon from "phosphor-react-native"
@@ -11,18 +12,26 @@ import React, { useRef, useState } from 'react'
 import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native'
 export default function LoginPage() {
     const router = useRouter()
-    const nameRef = useRef("");
     const emailRef = useRef("");
     const passwordRef = useRef("");
     const [loading, setLoading] = useState(false);
+    const {signIn} = useAuth();
 
-    const handleSubmit = () => {
-        if (!emailRef.current || !passwordRef.current || !nameRef.current) {
-            Alert.alert("Sign up", "Please fill the all fields");
+    const handleSubmit =async () => {
+        if (!emailRef.current || !passwordRef.current) {
+            Alert.alert("Sign In", "Please fill the all fields");
             return;
         };
 
         // to do
+        try {
+            setLoading(true);
+            await signIn(emailRef.current, passwordRef.current);
+        } catch (error: any) {
+            Alert.alert("Login Error", error.message)
+        } finally {
+            setLoading(false)
+        }
     }
 
     return (
@@ -33,7 +42,7 @@ export default function LoginPage() {
                 <View style={styles.container}>
                     <View style={styles.header}>
                         <BackButton iconSize={28} />
-                        <Typo color={colors.white} size={17}>Need some help?</Typo>
+                        <Typo color={colors.white} size={17}>Forget your password?</Typo>
                     </View>
 
                     <View style={styles.content}>
@@ -43,22 +52,13 @@ export default function LoginPage() {
                         >
                             <Typo
                                 size={24} fontWeight={"600"}
-                            >Getting started</Typo>
+                            >Welcome Back</Typo>
                             <Typo
                                 color={colors.neutral600}
                             >
-                                Create an account to continue
+                                We are happy to see you!
                             </Typo>
-                            {/* Name  filed */}
-                            <Input
-                                placeholder='Enter your Name'
-                                onChangeText={(value: string) => {
-                                    nameRef.current = value;
-                                }}
-                                icon={<Icon.UserIcon size={verticalScale(26)}
-                                    color={colors.neutral600}
-                                />}
-                            />
+
                             {/* Email filed */}
                             <Input
                                 placeholder='Enter your Email'
@@ -84,15 +84,15 @@ export default function LoginPage() {
 
                             <View style={{ marginTop: spacingY._25, gap: spacingY._15 }}>
                                 <Button loading={loading} onPress={handleSubmit}>
-                                    <Typo color={colors.black} fontWeight={"bold"} size={20}>Sign Up</Typo>
+                                    <Typo color={colors.black} fontWeight={"bold"} size={20}>Sign In</Typo>
                                 </Button>
                             </View>
 
                             {/* Footer */}
                             <View style={styles.footer}>
-                                <Typo>Already have an account?</Typo>
-                                <Pressable onPress={() => router.push("/(auth)/login")}>
-                                    <Typo fontWeight={"bold"} color={colors.primaryDark}>Login</Typo>
+                                <Typo>Don't have an account?</Typo>
+                                <Pressable onPress={() => router.push("/(auth)/register")}>
+                                    <Typo fontWeight={"bold"} color={colors.primaryDark}>Register</Typo>
                                 </Pressable>
                             </View>
                         </ScrollView>
