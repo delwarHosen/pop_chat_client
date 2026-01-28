@@ -36,6 +36,7 @@ export const spacingX = {
   _30: scale(30),
   _35: scale(35),
   _40: scale(40),
+  _160:scale(160)
 };
 
 export const spacingY = {
