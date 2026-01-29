@@ -33,3 +33,54 @@ export const updateProfile = (payload: any, off: boolean = false) => {
         socket.emit("updateProfile", payload); // sending payload as a data
     }
 }
+
+
+export const getContacts = (payload: any, off: boolean = false) => {
+    const socket = getSocket();
+    if (!socket) {
+        console.log("Socket is not connected");
+        return;
+    }
+
+    if (off) {
+        socket.off("getContacts", payload); // payload is the callback
+    } else if (typeof payload === "function") {
+        socket.on("getContacts", payload)  // payload as callback for this events
+    } else {
+        socket.emit("getContacts", payload); // sending payload as a data
+    }
+}
+
+
+export const newConversation = (payload: any, off: boolean = false) => {
+    const socket = getSocket();
+    if (!socket) {
+        console.log("Socket is not connected");
+        return;
+    }
+
+    if (off) {
+        socket.off("newConversation", payload); // payload is the callback
+    } else if (typeof payload === "function") {
+        socket.on("newConversation", payload)  // payload as callback for this events
+    } else {
+        socket.emit("newConversation", payload); // sending payload as a data
+    }
+}
+
+
+export const getConversations = (payload: any, off: boolean = false) => {
+    const socket = getSocket();
+    if (!socket) {
+        console.log("Socket is not connected");
+        return;
+    }
+
+    if (off) {
+        socket.off("getConversations", payload); // payload is the callback
+    } else if (typeof payload === "function") {
+        socket.on("getConversations", payload)  // payload as callback for this events
+    } else {
+        socket.emit("getConversations", payload); // sending payload as a data
+    }
+}

@@ -5,10 +5,12 @@ import ScreenWrapper from '@/components/ScreenWrapper'
 import Typo from '@/components/Typo'
 import { colors, radius, spacingX, spacingY } from '@/constants/theme'
 import { useAuth } from '@/context/authContext'
+import { getConversations, newConversation } from '@/socket/socketEvents'
+import { ConversationProps, ResponseProps } from '@/types'
 import { verticalScale } from '@/utils/styling'
 import { useRouter } from 'expo-router'
 import * as Icon from "phosphor-react-native"
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native'
 
 // import { testSocket } from '@/socket/socketEvents'
@@ -18,8 +20,34 @@ export default function MainHome() {
     const { user: currentUser, signOut } = useAuth()
     const [selectedTab, setSelectedTab] = useState(0)
     const [loading, setLoading] = useState(false);
+    const [conversations, setConversations] = useState<ConversationProps[]>([])
     const router = useRouter();
 
+
+    useEffect(() => {
+        getConversations(processConversation);
+
+        newConversation(newConversationHandler);
+
+        getConversations(null);
+        return () => {
+            getConversations(processConversation, true)
+            newConversation(newConversationHandler, true)
+        }
+    }, [])
+
+    const processConversation = (res: ResponseProps) => {
+        // console.log("res:", res)
+        if (res.success) {
+            setConversations(res.data);
+        }
+    }
+
+    const newConversationHandler = (res: ResponseProps) => {
+        if (res.success && res.data?.isNew) {
+            setConversations((prev) => [...prev, res.data]);
+        }
+    }
     // useEffect(() => {
     //     testSocket(testSocketCallbackHandler);
 
@@ -39,109 +67,109 @@ export default function MainHome() {
     }
 
 
-    const conversations = [
-        {
-            "name": "John Doe",
-            "type": "direct",
-            "lastMessage": {
-                "senderName": "John Doe",
-                "content": "Did you finish the report?",
-                "createdAt": "2026-01-28T09:30:00Z"
-            }
-        },
-        {
-            "name": "Design Squad",
-            "type": "group",
-            "lastMessage": {
-                "senderName": "Mike",
-                "content": "The new logos are ready for review.",
-                "createdAt": "2026-01-28T10:15:00Z"
-            }
-        },
-        {
-            "name": "Emily Watson",
-            "type": "direct",
-            "lastMessage": {
-                "senderName": "Emily Watson",
-                "content": "Happy Birthday! Have a great day.",
-                "createdAt": "2026-01-27T00:05:00Z"
-            }
-        },
-        {
-            "name": "Family Group",
-            "type": "group",
-            "lastMessage": {
-                "senderName": "Mom",
-                "content": "Dinner is at 7 PM tonight.",
-                "createdAt": "2026-01-28T14:20:00Z"
-            }
-        },
-        {
-            "name": "Alex Smith",
-            "type": "direct",
-            "lastMessage": {
-                "senderName": "Alex Smith",
-                "content": "Can we hop on a quick call?",
-                "createdAt": "2026-01-28T11:45:00Z"
-            }
-        },
-        {
-            "name": "Dev Team",
-            "type": "group",
-            "lastMessage": {
-                "senderName": "Sarah",
-                "content": "Pushed the latest changes to main branch.",
-                "createdAt": "2026-01-28T16:00:00Z"
-            }
-        },
-        {
-            "name": "Jessica",
-            "type": "direct",
-            "lastMessage": {
-                "senderName": "Jessica",
-                "content": "I'll be there in 5 minutes.",
-                "createdAt": "2026-01-28T17:10:00Z"
-            }
-        },
-        {
-            "name": "Marketing Hub",
-            "type": "group",
-            "lastMessage": {
-                "senderName": "Chris",
-                "content": "Social media campaign starts tomorrow.",
-                "createdAt": "2026-01-27T15:30:00Z"
-            }
-        },
-        {
-            "name": "David Miller",
-            "type": "direct",
-            "lastMessage": {
-                "senderName": "David Miller",
-                "content": "The invoice has been paid.",
-                "createdAt": "2026-01-26T12:00:00Z"
-            }
-        },
+    // const conversations = [
+    //     {
+    //         "name": "John Doe",
+    //         "type": "direct",
+    //         "lastMessage": {
+    //             "senderName": "John Doe",
+    //             "content": "Did you finish the report?",
+    //             "createdAt": "2026-01-28T09:30:00Z"
+    //         }
+    //     },
+    //     {
+    //         "name": "Design Squad",
+    //         "type": "group",
+    //         "lastMessage": {
+    //             "senderName": "Mike",
+    //             "content": "The new logos are ready for review.",
+    //             "createdAt": "2026-01-28T10:15:00Z"
+    //         }
+    //     },
+    //     {
+    //         "name": "Emily Watson",
+    //         "type": "direct",
+    //         "lastMessage": {
+    //             "senderName": "Emily Watson",
+    //             "content": "Happy Birthday! Have a great day.",
+    //             "createdAt": "2026-01-27T00:05:00Z"
+    //         }
+    //     },
+    //     {
+    //         "name": "Family Group",
+    //         "type": "group",
+    //         "lastMessage": {
+    //             "senderName": "Mom",
+    //             "content": "Dinner is at 7 PM tonight.",
+    //             "createdAt": "2026-01-28T14:20:00Z"
+    //         }
+    //     },
+    //     {
+    //         "name": "Alex Smith",
+    //         "type": "direct",
+    //         "lastMessage": {
+    //             "senderName": "Alex Smith",
+    //             "content": "Can we hop on a quick call?",
+    //             "createdAt": "2026-01-28T11:45:00Z"
+    //         }
+    //     },
+    //     {
+    //         "name": "Dev Team",
+    //         "type": "group",
+    //         "lastMessage": {
+    //             "senderName": "Sarah",
+    //             "content": "Pushed the latest changes to main branch.",
+    //             "createdAt": "2026-01-28T16:00:00Z"
+    //         }
+    //     },
+    //     {
+    //         "name": "Jessica",
+    //         "type": "direct",
+    //         "lastMessage": {
+    //             "senderName": "Jessica",
+    //             "content": "I'll be there in 5 minutes.",
+    //             "createdAt": "2026-01-28T17:10:00Z"
+    //         }
+    //     },
+    //     {
+    //         "name": "Marketing Hub",
+    //         "type": "group",
+    //         "lastMessage": {
+    //             "senderName": "Chris",
+    //             "content": "Social media campaign starts tomorrow.",
+    //             "createdAt": "2026-01-27T15:30:00Z"
+    //         }
+    //     },
+    //     {
+    //         "name": "David Miller",
+    //         "type": "direct",
+    //         "lastMessage": {
+    //             "senderName": "David Miller",
+    //             "content": "The invoice has been paid.",
+    //             "createdAt": "2026-01-26T12:00:00Z"
+    //         }
+    //     },
 
-    ]
+    // ]
 
     let directConversations = conversations
-        .filter((item: any) => item.type == "direct")
-        .sort((a: any, b: any) => {
+        .filter((item: ConversationProps) => item.type == "direct")
+        .sort((a: ConversationProps, b: ConversationProps) => {
             const aDate = a?.lastMessage?.createdAt || a.createdAt;
             const bDate = b?.lastMessage?.createdAt || b.createdAt;
             return new Date(bDate).getTime() - new Date(aDate).getTime();
         });
 
     let groupConversations = conversations
-        .filter((item: any) => item.type == "group")
-        .sort((a: any, b: any) => {
+        .filter((item: ConversationProps) => item.type == "group")
+        .sort((a: ConversationProps, b: ConversationProps) => {
             const aDate = a?.lastMessage?.createdAt || a.createdAt;
             const bDate = b?.lastMessage?.createdAt || b.createdAt;
             return new Date(bDate).getTime() - new Date(aDate).getTime();
         });
 
 
-   
+
 
 
     return (
@@ -191,7 +219,7 @@ export default function MainHome() {
 
                         <View style={styles.conversationList}>
                             {selectedTab == 0 &&
-                                directConversations.map((item: any, index) => {
+                                directConversations.map((item: ConversationProps, index) => {
                                     return (
                                         <ConversationItem
                                             item={item}
@@ -203,7 +231,7 @@ export default function MainHome() {
                                 })}
 
                             {selectedTab == 1 &&
-                                groupConversations.map((item: any, index) => {
+                                groupConversations.map((item: ConversationProps, index) => {
                                     return (
                                         <ConversationItem
                                             item={item}
