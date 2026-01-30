@@ -62,48 +62,41 @@ export default function ProfileModal() {
   }, [user])
 
 
+  // image picker
   const pickImage = async () => {
+    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (!permissionResult.granted) {
+      Alert.alert('Permission required', 'Permission to access the media library is required.');
+      return;
+    }
+
     let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: "images",
-      // allowsEditing: true,
-      aspect: [4, 3],
-      quality: 0.5,
+      mediaTypes: ['images'], // শুধু images
+      allowsEditing: true,
+      aspect: [1, 1], // square
+      quality: 0.7, // quality কমানো
     });
 
-    console.log(result);
+    console.log('Image picker result:', result);
 
     if (!result.canceled) {
-      setUserData({ ...userData, avatar: result.assets[0] });
+      const selectedImage = result.assets[0];
+
+      setUserData({
+        ...userData,
+        avatar: {
+          uri: selectedImage.uri,
+          type: selectedImage.type || 'image/jpeg',
+          name: selectedImage.fileName || `photo_${Date.now()}.jpg`
+        }
+      });
+      setImage(selectedImage.uri);
     }
   };
 
-  // image picker
-  // const pickImage = async () => {
-  //   const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-
-  //   if (!permissionResult.granted) {
-  //     Alert.alert('Permission required', 'Permission to access the media library is required.');
-  //     return;
-  //   }
-
-  //   let result = await ImagePicker.launchImageLibraryAsync({
-  //     mediaTypes: ['images', 'videos'],
-  //     allowsEditing: true,
-  //     aspect: [4, 3],
-  //     quality: 1,
-  //   });
-
-  //   console.log(result);
-
-  //   if (!result.canceled) {
-  //     setImage(result.assets[0].uri);
-  //   }
-  // };
-
 
   // handle Logout 
-
-
   const handleLogout = async () => {
     router.back();
     await signOut();
@@ -132,6 +125,7 @@ export default function ProfileModal() {
     let { name, avatar } = userData;
     if (!name.trim()) {
       Alert.alert("User", "Please Enter your name")
+      return;
     }
     const data = {
       name, avatar
@@ -152,9 +146,8 @@ export default function ProfileModal() {
       }
     }
 
-    // setLoading(true);
+    setLoading(true);
     updateProfile(data)
-
   }
 
 
@@ -173,7 +166,6 @@ export default function ProfileModal() {
         <ScrollView contentContainerStyle={styles.form}>
           <View style={styles.avatarcontainer}>
             <Avatar
-              // uri={user?.avatar}
               uri={userData?.avatar}
               size={160}
             />
@@ -212,13 +204,10 @@ export default function ProfileModal() {
                 containerStyle={{
                   borderColor: colors.neutral350,
                   paddingLeft: spacingX._20,
-                  // backgroundColor: colors.neutral300
                 }}
                 onChangeText={(value) =>
                   setUserData({ ...userData, name: value })
                 }
-              // editable={false}
-
               />
             </View>
 
@@ -256,7 +245,7 @@ const styles = StyleSheet.create({
   constainer: {
     flex: 1,
     justifyContent: "space-between",
-    paddingHorizontal: spacingY._20
+    paddingHorizontal: spacingY._20,
   },
   footer: {
     flexDirection: "row",
@@ -266,7 +255,7 @@ const styles = StyleSheet.create({
     gap: scale(12),
     paddingTop: spacingY._15,
     borderTopColor: colors.neutral200,
-    marginBottom: spacingY._20,
+    marginBottom: 50,
     borderTopWidth: 1
   },
 
@@ -305,6 +294,5 @@ const styles = StyleSheet.create({
 
   inputContainer: {
     gap: spacingY._7,
-    // marginTop: spacingX._160
   }
 })
