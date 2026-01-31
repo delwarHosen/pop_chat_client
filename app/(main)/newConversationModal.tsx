@@ -45,26 +45,39 @@ export default function NewConversationModal() {
     };
 
     const processNewConversation = (res: any) => {
-        console.log("New converstion result", res.data.participants);
         setIsLoading(false);
-        if (res.success) {
+
+        // যদি কনভারসেশন আগে থেকেই থাকে (Backend should ideally return the existing one)
+        // অথবা যদি নতুন তৈরি হয়:
+        if (res && res.success && res.data) {
             router.back();
-            router.push({
-                pathname: "./conversation",
-                params: {
-                    id: res.data._id,
-                    name: res.data.name,
-                    avatar: res.data.avatar,
-                    type: res.data.type,
-                    participants: JSON.stringify(res.data.participants)
-                }
-            })
-        }
-        else {
-            console.log("Error Fatching/ craeting conversation", res.msg);
-            Alert.alert("Error", res.msg)
+            // সামান্য ডিলে দিয়ে পুশ করুন যাতে মোডাল বন্ধ হওয়ার সময় সমস্যা না হয়
+            setTimeout(() => {
+                router.push({
+                    pathname: "/(main)/conversation",
+                    params: {
+                        id: res.data._id,
+                        name: res.data.name || "", // handles group name
+                        avatar: res.data.avatar || "",
+                        type: res.data.type,
+                        participants: JSON.stringify(res.data.participants)
+                    }
+                });
+            }, 100);
+        } else {
+            const errorMessage = res?.msg || "Failed to create conversation";
+
+            // যদি ডুপ্লিকেট এরর আসে, তার মানে কনভারসেশন আছে কিন্তু সার্ভার ডাটা পাঠাচ্ছে না
+            if (errorMessage.includes("E11000 duplicate key error")) {
+                // এই অবস্থায় সার্ভারকে বলা উচিত ছিল existing data দিতে। 
+                // সাময়িকভাবে ইউজারকে অ্যালার্ট দিন।
+                Alert.alert("Notice", "This conversation already exists in your list.");
+            } else {
+                Alert.alert("Error", errorMessage);
+            }
         }
     }
+
 
 
     const pickImage = async () => {
@@ -142,59 +155,7 @@ export default function NewConversationModal() {
 
     }
 
-    // const contacts = [
-    //     {
-    //         id: "1",
-    //         name: "Benjamin Harris",
-    //         avatar: "https://i.pravatar.cc/150?img=1",
-    //     },
-    //     {
-    //         id: "2",
-    //         name: "Mia Clark",
-    //         avatar: "https://i.pravatar.cc/150?img=2",
-    //     },
-    //     {
-    //         id: "3",
-    //         name: "Oliver Smith",
-    //         avatar: "https://i.pravatar.cc/150?img=3",
-    //     },
-    //     {
-    //         id: "4",
-    //         name: "Sophia Johnson",
-    //         avatar: "https://i.pravatar.cc/150?img=4",
-    //     },
-    //     {
-    //         id: "5",
-    //         name: "Liam Brown",
-    //         avatar: "https://i.pravatar.cc/150?img=5",
-    //     },
-    //     {
-    //         id: "6",
-    //         name: "Emma Wilson",
-    //         avatar: "https://i.pravatar.cc/150?img=6",
-    //     },
-    //     {
-    //         id: "7",
-    //         name: "Noah Taylor",
-    //         avatar: "https://i.pravatar.cc/150?img=7",
-    //     },
-    //     {
-    //         id: "8",
-    //         name: "Ava Martinez",
-    //         avatar: "https://i.pravatar.cc/150?img=8",
-    //     },
-    //     {
-    //         id: "9",
-    //         name: "William Anderson",
-    //         avatar: "https://i.pravatar.cc/150?img=9",
-    //     },
-    //     {
-    //         id: "10",
-    //         name: "Isabella Thomas",
-    //         avatar: "https://i.pravatar.cc/150?img=10",
-    //     },
-
-    // ]
+   
 
 
 

@@ -12,12 +12,13 @@ export const ConversationItem = ({ item, showDivider, router }: ConversationList
     const lastMessage: any = item.lastMessage;
     const isDirect = item.type == 'direct';
 
-    
+  
+
     const otherParticipant = isDirect
         ? item.participants.find((p) => p._id !== currentUser?.id)
         : null;
 
-  
+
     const conversationName = isDirect ? otherParticipant?.name : item.name;
     const conversationAvatar = isDirect ? otherParticipant?.avatar : item.avatar;
 
@@ -37,16 +38,18 @@ export const ConversationItem = ({ item, showDivider, router }: ConversationList
     };
 
     const openConversation = () => {
+
         router.push({
             pathname: "/(main)/conversation",
             params: {
                 id: item._id,
-                name: conversationName, 
-                avatar: conversationAvatar, 
+                name: conversationName,
+                avatar: conversationAvatar,
                 type: item.type,
                 participants: JSON.stringify(item.participants),
             },
         });
+        console.log("particpants from json: ", JSON.stringify(item.participants))
     };
 
     return (

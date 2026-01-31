@@ -72,10 +72,10 @@ export default function ProfileModal() {
     }
 
     let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'], // শুধু images
+      mediaTypes: ['images'], //  images
       allowsEditing: true,
       aspect: [1, 1], // square
-      quality: 0.7, // quality কমানো
+      quality: 0.7, // quality 
     });
 
     console.log('Image picker result:', result);

@@ -35,17 +35,36 @@ export default function Conversation() {
     const [loading, setLoading] = useState(false);
 
 
-    const participants = JSON.parse(stringifiedParticipants as string);
-    let conversationAvatar = avatar;
+    const participants = stringifiedParticipants ? JSON.parse(stringifiedParticipants as string) : [];
+    // const participants = JSON.parse(stringifiedParticipants as string);
+    console.log("Participants from conversation", participants)
+    // let conversationAvatar = avatar;
     let isDirect = type == "direct";
 
-    const otherParticipant = isDirect ? participants.find((p: any) => p.id != currentUser?.id) : null
+
+
+    // const otherParticipant = isDirect ? participants.find((p: any) => p.id != currentUser?.id) : null
+
+    // const otherParticipant = isDirect
+    //     ? participants.find((p: any) => (p.id || p._id) !== currentUser?.id)
+    //     : null;
+
+    const otherParticipant = isDirect
+        ? participants.find((p: any) => {
+            const pId = p._id || p.id; 
+            return pId !== currentUser?.id;
+        })
+        : null;
+
+    let conversationName = isDirect ? (otherParticipant?.name || "User") : name;
+    let conversationAvatar = isDirect ? otherParticipant?.avatar : avatar;
 
     if (isDirect && otherParticipant) {
         conversationAvatar = otherParticipant.avatar;
     }
 
-    let conversationName = isDirect ? otherParticipant.name : name
+    // let conversationName = isDirect ? otherParticipant.name : name
+
 
     // <-------New Message ------>
     useEffect(() => {
@@ -68,7 +87,7 @@ export default function Conversation() {
                 setMessages((prev) => [res.data as MessageProps, ...prev]);
             }
         } else {
-            Alert.alert("Error", res.msg);
+            Alert.alert("Errorrrr", res.msg);
         }
 
     }
@@ -77,133 +96,33 @@ export default function Conversation() {
         if (res.success) setMessages(res.data);
     }
 
-    // const dummyMessages = [
-    //     {
-    //         id: "msg_1",
-    //         sender: {
-    //             id: "user_1",
-    //             name: "John Doe",
-    //             avatar: null,
-    //         },
-    //         content: "Hey! Are you available for a quick call?",
-    //         createdAt: "10:30 AM",
-    //         isMe: false,
-    //     },
-    //     {
-    //         id: "msg_2",
-    //         sender: {
-    //             id: "me",
-    //             name: "Me",
-    //             avatar: null,
-    //         },
-    //         content: "Yes, give me 5 minutes.",
-    //         createdAt: "10:31 AM",
-    //         isMe: true,
-    //     },
-    //     {
-    //         id: "msg_3",
-    //         sender: {
-    //             id: "user_1",
-    //             name: "John Doe",
-    //             avatar: null,
-    //         },
-    //         content: "Sure, no problem 👍",
-    //         createdAt: "10:32 AM",
-    //         isMe: false,
-    //     },
-    //     {
-    //         id: "msg_4",
-    //         sender: {
-    //             id: "me",
-    //             name: "Me",
-    //             avatar: null,
-    //         },
-    //         content: "Thanks! Calling you now.",
-    //         createdAt: "10:35 AM",
-    //         isMe: true,
-    //     },
-    //     {
-    //         id: "msg_5",
-    //         sender: {
-    //             id: "user_3",
-    //             name: "Alice Brown",
-    //             avatar: null,
-    //         },
-    //         content: "Did you check the new design updates?",
-    //         createdAt: "10:38 AM",
-    //         isMe: false,
-    //     },
-    //     {
-    //         id: "msg_6",
-    //         sender: {
-    //             id: "me",
-    //             name: "Me",
-    //             avatar: null,
-    //         },
-    //         content: "Yes, they look great! 🎉",
-    //         createdAt: "10:39 AM",
-    //         isMe: true,
-    //     },
-    //     {
-    //         id: "msg_7",
-    //         sender: {
-    //             id: "user_3",
-    //             name: "Alice Brown",
-    //             avatar: null,
-    //         },
-    //         content: "Awesome! I'll move forward then.",
-    //         createdAt: "10:40 AM",
-    //         isMe: false,
-    //     },
-    //     {
-    //         id: "msg_8",
-    //         sender: {
-    //             id: "me",
-    //             name: "Me",
-    //             avatar: null,
-    //         },
-    //         content: "Perfect, keep me posted.",
-    //         createdAt: "10:41 AM",
-    //         isMe: true,
-    //     },
-    //     {
-    //         id: "msg_9",
-    //         sender: {
-    //             id: "user_2",
-    //             name: "Jane Smith",
-    //             avatar: null,
-    //         },
-    //         content: "That would be really useful!",
-    //         createdAt: "10:42 AM",
-    //         isMe: false,
-    //     },
-    //     {
-    //         id: "msg_10",
-    //         sender: {
-    //             id: "me",
-    //             name: "Me",
-    //             avatar: null,
-    //         },
-    //         content: "Yes, I'm thinking about adding message reactions and file sharing.",
-    //         createdAt: "10:43 AM",
-    //         isMe: true,
-    //     }
-    // ]
+
+
+
 
     const onPickFile = async () => {
+        const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+        if (!permissionResult.granted) {
+            Alert.alert('Permission required', 'Permission to access the media library is required.');
+            return;
+        }
+
         let result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: "images",
-            // allowsEditing: true,
-            aspect: [4, 3],
-            quality: 0.5,
+            mediaTypes: ['images'], // images
+            allowsEditing: true,
+            aspect: [1, 1], // square
+            quality: 0.7, // quality 
         });
 
-        console.log(result);
+        // console.log('Image picker result:', result);
 
         if (!result.canceled) {
+            // const selectedImage = result.assets[0];
             setSelectedFile(result.assets[0]);
         }
     };
+
 
 
     // <---------send handler-------->

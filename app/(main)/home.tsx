@@ -5,7 +5,7 @@ import ScreenWrapper from '@/components/ScreenWrapper'
 import Typo from '@/components/Typo'
 import { colors, radius, spacingX, spacingY } from '@/constants/theme'
 import { useAuth } from '@/context/authContext'
-import { getConversations, newConversation, newMessage } from '@/socket/socketEvents'
+import { getConversations, newConversation, newMessage, testSocket } from '@/socket/socketEvents'
 import { ConversationProps, ResponseProps } from '@/types'
 import { verticalScale } from '@/utils/styling'
 import { useRouter } from 'expo-router'
@@ -29,7 +29,7 @@ export default function MainHome() {
         newConversation(newConversationHandler);
         newMessage(newMessageHandler);
 
-        getConversations(null);
+        // getConversations(null);
         return () => {
             getConversations(processConversation, true);
             newConversation(newConversationHandler, true);
@@ -58,114 +58,43 @@ export default function MainHome() {
         }
     }
 
+    // const newConversationHandler = (res: ResponseProps) => {
+    //     if (res.success && res.data?.isNew) {
+    //         setConversations((prev) => [...prev, res.data]);
+    //     }r
+    // }
+
     const newConversationHandler = (res: ResponseProps) => {
-        if (res.success && res.data?.isNew) {
-            setConversations((prev) => [...prev, res.data]);
+        if (res.success) {
+            setConversations((prev) => {
+                // চেক করুন লিস্টে এই আইডি অলরেডি আছে কি না
+                const exists = prev.find(c => c._id === res.data._id);
+                if (exists) return prev;
+                return [res.data, ...prev];
+            });
         }
     }
-    // useEffect(() => {
-    //     testSocket(testSocketCallbackHandler);
 
-    //     testSocket({ status: "Hello Server" });
+    useEffect(() => {
+        testSocket(testSocketCallbackHandler);
 
-    //     return () => {
-    //         testSocket(testSocketCallbackHandler, true);
-    //     }
-    // }, [])
+        testSocket({ status: "Hello Server" });
 
-    // const testSocketCallbackHandler = (data: any) => {
-    //     console.log("Response from server:", data.msg); // "Real time updated"
-    // }
+        return () => {
+            testSocket(testSocketCallbackHandler, true);
+        }
+    }, [])
+
+    const testSocketCallbackHandler = (data: any) => {
+        console.log("Response from server:", data.msg); // "Real time updated"
+    }
 
     const handleLogout = async () => {
         await signOut()
     }
 
 
-    // const conversations = [
-    //     {
-    //         "name": "John Doe",
-    //         "type": "direct",
-    //         "lastMessage": {
-    //             "senderName": "John Doe",
-    //             "content": "Did you finish the report?",
-    //             "createdAt": "2026-01-28T09:30:00Z"
-    //         }
-    //     },
-    //     {
-    //         "name": "Design Squad",
-    //         "type": "group",
-    //         "lastMessage": {
-    //             "senderName": "Mike",
-    //             "content": "The new logos are ready for review.",
-    //             "createdAt": "2026-01-28T10:15:00Z"
-    //         }
-    //     },
-    //     {
-    //         "name": "Emily Watson",
-    //         "type": "direct",
-    //         "lastMessage": {
-    //             "senderName": "Emily Watson",
-    //             "content": "Happy Birthday! Have a great day.",
-    //             "createdAt": "2026-01-27T00:05:00Z"
-    //         }
-    //     },
-    //     {
-    //         "name": "Family Group",
-    //         "type": "group",
-    //         "lastMessage": {
-    //             "senderName": "Mom",
-    //             "content": "Dinner is at 7 PM tonight.",
-    //             "createdAt": "2026-01-28T14:20:00Z"
-    //         }
-    //     },
-    //     {
-    //         "name": "Alex Smith",
-    //         "type": "direct",
-    //         "lastMessage": {
-    //             "senderName": "Alex Smith",
-    //             "content": "Can we hop on a quick call?",
-    //             "createdAt": "2026-01-28T11:45:00Z"
-    //         }
-    //     },
-    //     {
-    //         "name": "Dev Team",
-    //         "type": "group",
-    //         "lastMessage": {
-    //             "senderName": "Sarah",
-    //             "content": "Pushed the latest changes to main branch.",
-    //             "createdAt": "2026-01-28T16:00:00Z"
-    //         }
-    //     },
-    //     {
-    //         "name": "Jessica",
-    //         "type": "direct",
-    //         "lastMessage": {
-    //             "senderName": "Jessica",
-    //             "content": "I'll be there in 5 minutes.",
-    //             "createdAt": "2026-01-28T17:10:00Z"
-    //         }
-    //     },
-    //     {
-    //         "name": "Marketing Hub",
-    //         "type": "group",
-    //         "lastMessage": {
-    //             "senderName": "Chris",
-    //             "content": "Social media campaign starts tomorrow.",
-    //             "createdAt": "2026-01-27T15:30:00Z"
-    //         }
-    //     },
-    //     {
-    //         "name": "David Miller",
-    //         "type": "direct",
-    //         "lastMessage": {
-    //             "senderName": "David Miller",
-    //             "content": "The invoice has been paid.",
-    //             "createdAt": "2026-01-26T12:00:00Z"
-    //         }
-    //     },
 
-    // ]
 
     let directConversations = conversations
         .filter((item: ConversationProps) => item.type == "direct")
@@ -182,9 +111,6 @@ export default function MainHome() {
             const bDate = b?.lastMessage?.createdAt || b.createdAt;
             return new Date(bDate).getTime() - new Date(aDate).getTime();
         });
-
-
-
 
 
     return (
