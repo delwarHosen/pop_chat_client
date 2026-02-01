@@ -5,23 +5,23 @@ import ScreenWrapper from '@/components/ScreenWrapper'
 import Typo from '@/components/Typo'
 import { colors, radius, spacingX, spacingY } from '@/constants/theme'
 import { useAuth } from '@/context/authContext'
-import { getConversations, newConversation, newMessage, testSocket } from '@/socket/socketEvents'
+import { getConversations, newConversation, newMessage } from '@/socket/socketEvents'
 import { ConversationProps, ResponseProps } from '@/types'
 import { verticalScale } from '@/utils/styling'
+import { useFocusEffect } from '@react-navigation/native'
 import { useRouter } from 'expo-router'
 import * as Icon from "phosphor-react-native"
-import { useEffect, useState } from 'react'
-import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native'
-
-// import { testSocket } from '@/socket/socketEvents'
-// import React, { useEffect } from 'react'
+import { useCallback, useEffect, useState } from 'react'
+import { RefreshControl, ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native'
 
 export default function MainHome() {
     const { user: currentUser, signOut } = useAuth()
     const [selectedTab, setSelectedTab] = useState(0)
     const [loading, setLoading] = useState(false);
+    const [refreshing, setRefreshing] = useState(false);
     const [conversations, setConversations] = useState<ConversationProps[]>([])
     const router = useRouter();
+
 
 
     useEffect(() => {
@@ -29,7 +29,6 @@ export default function MainHome() {
         newConversation(newConversationHandler);
         newMessage(newMessageHandler);
 
-        // getConversations(null);
         return () => {
             getConversations(processConversation, true);
             newConversation(newConversationHandler, true);
@@ -38,12 +37,28 @@ export default function MainHome() {
     }, [])
 
 
+    useFocusEffect(
+        useCallback(() => {
+            console.log("Screen focused, refreshing conversations");
+            getConversations(null);
+        }, [])
+    );
+
+
+    useEffect(() => {
+        console.log("Tab changed to:", selectedTab);
+        getConversations(null);
+    }, [selectedTab]);
+
+
     const newMessageHandler = (res: ResponseProps) => {
         if (res.success) {
             let conversationId = res.data.conversationId;
             setConversations((prev) => {
                 let updatedConversations = prev.map((item) => {
-                    if (item._id == conversationId) item.lastMessage == res.data;
+                    if (item._id == conversationId) {
+                        return { ...item, lastMessage: res.data };
+                    }
                     return item;
                 });
                 return updatedConversations;
@@ -51,49 +66,38 @@ export default function MainHome() {
         }
     }
 
+
     const processConversation = (res: ResponseProps) => {
-        // console.log("res:", res)
+        console.log("Processing conversations:", res?.data?.length || 0);
         if (res.success) {
             setConversations(res.data);
         }
+        setRefreshing(false);
     }
 
-    // const newConversationHandler = (res: ResponseProps) => {
-    //     if (res.success && res.data?.isNew) {
-    //         setConversations((prev) => [...prev, res.data]);
-    //     }r
-    // }
 
     const newConversationHandler = (res: ResponseProps) => {
+        console.log("New conversation received:", res.data);
         if (res.success) {
             setConversations((prev) => {
-                // চেক করুন লিস্টে এই আইডি অলরেডি আছে কি না
+                // Check if conversation already exists
                 const exists = prev.find(c => c._id === res.data._id);
-                if (exists) return prev;
+                if (exists) {
+                    console.log("Conversation already exists");
+                    return prev;
+                }
+                console.log("Adding new conversation to list");
                 return [res.data, ...prev];
             });
         }
     }
 
-    useEffect(() => {
-        testSocket(testSocketCallbackHandler);
 
-        testSocket({ status: "Hello Server" });
-
-        return () => {
-            testSocket(testSocketCallbackHandler, true);
-        }
-    }, [])
-
-    const testSocketCallbackHandler = (data: any) => {
-        console.log("Response from server:", data.msg); // "Real time updated"
-    }
-
-    const handleLogout = async () => {
-        await signOut()
-    }
-
-
+    const onRefresh = () => {
+        setRefreshing(true);
+        getConversations(null);
+        // processConversation will set refreshing to false
+    };
 
 
     let directConversations = conversations
@@ -118,10 +122,10 @@ export default function MainHome() {
             <View style={styles.container}>
                 <View style={styles.header}>
                     <View style={{ flex: 1 }}>
-                        <Typo color={colors.neutral200} size={16} textProps={{ numberOfLines: 1 }}>Welcome Back, <Typo size={19} color={colors.white} fontWeight={"800"}>{currentUser?.name}</Typo>{" "}
+                        <Typo color={colors.neutral200} size={16} textProps={{ numberOfLines: 1 }}>
+                            Welcome Back, <Typo size={19} color={colors.white} fontWeight={"800"}>{currentUser?.name}</Typo>{" "}
                             🤙
                         </Typo>
-
                     </View>
                     <TouchableOpacity style={styles.settingIcon} onPress={() => router.push("/profileModal")}>
                         <Icon.GearSixIcon color={colors.white} weight='fill' size={verticalScale(22)} />
@@ -133,6 +137,14 @@ export default function MainHome() {
                     <ScrollView
                         showsVerticalScrollIndicator={false}
                         contentContainerStyle={{ paddingVertical: spacingY._20 }}
+                        refreshControl={
+                            <RefreshControl
+                                refreshing={refreshing}
+                                onRefresh={onRefresh}
+                                tintColor={colors.primary}
+                                colors={[colors.primary]}
+                            />
+                        }
                     >
                         <View style={styles.navbar}>
                             <View style={styles.tabs}>
@@ -156,15 +168,15 @@ export default function MainHome() {
                                 </TouchableOpacity>
                             </View>
                         </View>
-                        {/* -------conversation list----- */}
 
+                        {/* -------conversation list----- */}
                         <View style={styles.conversationList}>
                             {selectedTab == 0 &&
                                 directConversations.map((item: ConversationProps, index) => {
                                     return (
                                         <ConversationItem
                                             item={item}
-                                            key={index}
+                                            key={item._id || index}
                                             router={router}
                                             showDivider={directConversations.length != index + 1}
                                         />
@@ -176,7 +188,7 @@ export default function MainHome() {
                                     return (
                                         <ConversationItem
                                             item={item}
-                                            key={index}
+                                            key={item._id || index}
                                             router={router}
                                             showDivider={groupConversations.length != index + 1}
                                         />
@@ -230,7 +242,6 @@ export default function MainHome() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-
     },
 
     header: {

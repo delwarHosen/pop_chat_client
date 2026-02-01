@@ -24,7 +24,7 @@ export const ConversationItem = ({ item, showDivider, router }: ConversationList
 
     const getLastMessageContent = () => {
         if (!lastMessage) return "Say hi 👋";
-        return lastMessage?.attachement ? "📷 Image" : lastMessage.content;
+        return lastMessage?.attachment ? "📷 Image" : lastMessage.content;
     };
 
     const getLastMessageDate = () => {

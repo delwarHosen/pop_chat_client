@@ -42,16 +42,9 @@ export default function Conversation() {
     let isDirect = type == "direct";
 
 
-
-    // const otherParticipant = isDirect ? participants.find((p: any) => p.id != currentUser?.id) : null
-
-    // const otherParticipant = isDirect
-    //     ? participants.find((p: any) => (p.id || p._id) !== currentUser?.id)
-    //     : null;
-
     const otherParticipant = isDirect
         ? participants.find((p: any) => {
-            const pId = p._id || p.id; 
+            const pId = p._id || p.id;
             return pId !== currentUser?.id;
         })
         : null;
@@ -120,35 +113,36 @@ export default function Conversation() {
         if (!result.canceled) {
             // const selectedImage = result.assets[0];
             setSelectedFile(result.assets[0]);
+            // r
         }
     };
 
 
 
     // <---------send handler-------->
+    // onSend function 
+
     const onSend = async () => {
         if (!message.trim() && !selectedFile) return;
-
         if (!currentUser) return;
 
         setLoading(true);
 
         try {
-            let attachement = null;
+            let attachment = null;  
             if (selectedFile) {
                 const uploadResult = await uploadFileToCloudinary(
                     selectedFile, "message-attachment"
                 );
 
                 if (uploadResult.success) {
-                    attachement = uploadResult.data;
-                }
-                else {
+                    attachment = uploadResult.data;  
+                } else {
                     setLoading(false);
-                    Alert.alert("Error", "Could not send the image")
+                    Alert.alert("Error", "Could not send the image");
+                    return;  
                 }
             }
-
 
             newMessage({
                 conversationId,
@@ -158,8 +152,9 @@ export default function Conversation() {
                     avatar: currentUser.avatar
                 },
                 content: message.trim(),
-                attachement
-            })
+                attachment  
+            });
+
             setMessage("");
             setSelectedFile(null);
 
@@ -170,6 +165,7 @@ export default function Conversation() {
             setLoading(false);
         }
     };
+
 
 
     return (
